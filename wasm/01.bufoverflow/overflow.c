@@ -54,6 +54,9 @@ int main( ) {
    int result = 0; 
    result = vulnerable();
    printf("Result: %d\n", result);
+   if (result == 1) {
+	printf("No overflow occurred.\n");
+   }
    return 0;
 }
 
