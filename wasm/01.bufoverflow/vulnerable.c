@@ -4,17 +4,25 @@
 char src[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj";
 
 int fun2() {
+   char strfun2[] = "strfun2";
+   printf("\nstrfun2: ");
+   puts(strfun2);
    return 2;
 }
 
-int fun1() {
+int fun1(char *strfun1) {
+   printf("\nstrfun1: ");
+   puts(strfun1);
    return 1;
 }
 
 int vulnerable() {
    int one;
    int two;
+   char strfun1[] = "strfun1\n";
+   char str1[] = "string1\n"; // gets overwritten with "aaaaabbbb..." in both C and Wasm (but includes truncation in Wasm)
    char dest[5];
+   char str2[] = "string2\n"; // does not get overwritten in Wasm, but in C becomes "bbbbbbcccccccccc..."
 
    printf("\ndest is 5 characters long: ");
    puts(dest);
@@ -26,7 +34,7 @@ int vulnerable() {
 
    // This will introduce terminator (0001) at char 10 in Wasm, but not C
    printf("\nPerforming function call one ");
-   one = fun1(); 
+   one = fun1(strfun1); 
 
    printf("\ndest: ");
    puts(dest);
@@ -45,6 +53,11 @@ int vulnerable() {
    // Wasm prints up to char 6, C prints all characters from 3 onward
    printf("\ndest[3]: ");
    puts(dest+3);
+
+   printf("\nstr1: ");
+   puts(str1);
+   printf("\nstr2: ");
+   puts(str2);
 
    // Overflow in C, but not in Wasm
    return 1;

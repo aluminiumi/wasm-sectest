@@ -1242,11 +1242,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 5246928,
+    STACK_BASE = 5246992,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 4048,
-    DYNAMIC_BASE = 5246928,
-    DYNAMICTOP_PTR = 3888;
+    STACK_MAX = 4112,
+    DYNAMIC_BASE = 5246992,
+    DYNAMICTOP_PTR = 3952;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1650,7 +1650,7 @@ function isDataURI(filename) {
 
 
 
-var wasmBinaryFile = 'overflow.wasm';
+var wasmBinaryFile = 'vulnerable.wasm';
 if (!isDataURI(wasmBinaryFile)) {
   wasmBinaryFile = locateFile(wasmBinaryFile);
 }
@@ -1788,7 +1788,7 @@ var ASM_CONSTS = {
 
 
 
-// STATICTOP = STATIC_BASE + 3024;
+// STATICTOP = STATIC_BASE + 3088;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -1844,12 +1844,16 @@ var ASM_CONSTS = {
 
   function ___unlock() {}
 
+  function _abort() {
+      abort();
+    }
+
   function _emscripten_get_heap_size() {
       return HEAP8.length;
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 3888;
+      return 3952;
     }
 
   function _emscripten_memcpy_big(dest, src, num) {
@@ -2142,7 +2146,7 @@ function intArrayToString(array) {
 // ASM_LIBRARY EXTERN PRIMITIVES: Int8Array,Int32Array
 
 var asmGlobalArg = {};
-var asmLibraryArg = { "__handle_stack_overflow": ___handle_stack_overflow, "__lock": ___lock, "__unlock": ___unlock, "emscripten_get_sbrk_ptr": _emscripten_get_sbrk_ptr, "emscripten_memcpy_big": _emscripten_memcpy_big, "emscripten_resize_heap": _emscripten_resize_heap, "fd_write": _fd_write, "memory": wasmMemory, "setTempRet0": _setTempRet0, "table": wasmTable };
+var asmLibraryArg = { "__handle_stack_overflow": ___handle_stack_overflow, "__lock": ___lock, "__unlock": ___unlock, "abort": _abort, "emscripten_get_sbrk_ptr": _emscripten_get_sbrk_ptr, "emscripten_memcpy_big": _emscripten_memcpy_big, "emscripten_resize_heap": _emscripten_resize_heap, "fd_write": _fd_write, "memory": wasmMemory, "setTempRet0": _setTempRet0, "table": wasmTable };
 var asm = createWasm();
 Module["asm"] = asm;
 var ___wasm_call_ctors = Module["___wasm_call_ctors"] = function() {
