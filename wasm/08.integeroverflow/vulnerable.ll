@@ -1,42 +1,28 @@
 ; ModuleID = 'vulnerable.c'
 source_filename = "vulnerable.c"
-target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-pc-linux-gnu"
+target datalayout = "e-m:e-p:32:32-i64:64-n32:64-S128"
+target triple = "wasm32"
 
 @.str = private unnamed_addr constant [10 x i8] c"uint: %u\0A\00", align 1
 @.str.1 = private unnamed_addr constant [34 x i8] c"uint after incrementing by 1: %u\0A\00", align 1
 @.str.2 = private unnamed_addr constant [9 x i8] c"int: %d\0A\00", align 1
 @.str.3 = private unnamed_addr constant [33 x i8] c"int after incrementing by 1: %d\0A\00", align 1
 
-; Function Attrs: noinline nounwind optnone uwtable
-define i32 @main() #0 {
-  %1 = alloca i32, align 4
-  %2 = alloca i32, align 4
-  %3 = alloca i32, align 4
-  store i32 0, i32* %1, align 4
-  store i32 -1, i32* %2, align 4
-  %4 = load i32, i32* %2, align 4
-  %5 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str, i32 0, i32 0), i32 %4)
-  %6 = load i32, i32* %2, align 4
-  %7 = add i32 %6, 1
-  store i32 %7, i32* %2, align 4
-  %8 = load i32, i32* %2, align 4
-  %9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.1, i32 0, i32 0), i32 %8)
-  store i32 2147483647, i32* %3, align 4
-  %10 = load i32, i32* %3, align 4
-  %11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.2, i32 0, i32 0), i32 %10)
-  %12 = load i32, i32* %3, align 4
-  %13 = add nsw i32 %12, 1
-  store i32 %13, i32* %3, align 4
-  %14 = load i32, i32* %3, align 4
-  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([33 x i8], [33 x i8]* @.str.3, i32 0, i32 0), i32 %14)
+; Function Attrs: minsize nounwind optsize
+define hidden i32 @main() local_unnamed_addr #0 {
+  %1 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str, i32 0, i32 0), i32 -1) #2
+  %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.1, i32 0, i32 0), i32 0) #2
+  %3 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.2, i32 0, i32 0), i32 2147483647) #2
+  %4 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([33 x i8], [33 x i8]* @.str.3, i32 0, i32 0), i32 -2147483648) #2
   ret i32 0
 }
 
-declare i32 @printf(i8*, ...) #1
+; Function Attrs: minsize nounwind optsize
+declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #1
 
-attributes #0 = { noinline nounwind optnone uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #1 = { "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { minsize nounwind optsize "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { minsize nounwind optsize "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #2 = { minsize optsize }
 
 !llvm.module.flags = !{!0}
 !llvm.ident = !{!1}
