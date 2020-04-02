@@ -4,22 +4,22 @@ target datalayout = "e-m:e-p:32:32-i64:64-n32:64-S128"
 target triple = "wasm32"
 
 @src = hidden global [101 x i8] c"aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj\00", align 16
-@.str = private unnamed_addr constant [11 x i8] c"\0Astrfun2: \00", align 1
-@.str.1 = private unnamed_addr constant [11 x i8] c"\0Astrfun1: \00", align 1
+@.str = private unnamed_addr constant [18 x i8] c"stack string: %s\0A\00", align 1
+@.str.1 = private unnamed_addr constant [16 x i8] c"ptr string: %s\0A\00", align 1
 @vulnerable.strfun1 = private unnamed_addr constant [9 x i8] c"strfun1\0A\00", align 1
 @vulnerable.str1 = private unnamed_addr constant [9 x i8] c"string1\0A\00", align 1
 @vulnerable.str2 = private unnamed_addr constant [9 x i8] c"string2\0A\00", align 1
-@.str.2 = private unnamed_addr constant [29 x i8] c"\0Adest is 5 characters long: \00", align 1
-@.str.4 = private unnamed_addr constant [8 x i8] c"\0Adest: \00", align 1
-@.str.5 = private unnamed_addr constant [31 x i8] c"\0APerforming function call one \00", align 1
-@.str.6 = private unnamed_addr constant [31 x i8] c"\0APerforming function call two \00", align 1
-@.str.7 = private unnamed_addr constant [12 x i8] c"\0Adest[30]: \00", align 1
-@.str.8 = private unnamed_addr constant [11 x i8] c"\0Adest[3]: \00", align 1
-@.str.9 = private unnamed_addr constant [8 x i8] c"\0Astr1: \00", align 1
-@.str.10 = private unnamed_addr constant [8 x i8] c"\0Astr2: \00", align 1
+@.str.2 = private unnamed_addr constant [31 x i8] c"dest is 5 characters long: %s\0A\00", align 1
+@.str.4 = private unnamed_addr constant [10 x i8] c"dest: %s\0A\00", align 1
+@.str.7 = private unnamed_addr constant [14 x i8] c"dest[30]: %s\0A\00", align 1
+@.str.8 = private unnamed_addr constant [13 x i8] c"dest[3]: %s\0A\00", align 1
+@.str.9 = private unnamed_addr constant [10 x i8] c"str1: %s\0A\00", align 1
+@.str.10 = private unnamed_addr constant [10 x i8] c"str2: %s\0A\00", align 1
 @.str.11 = private unnamed_addr constant [12 x i8] c"Result: %d\0A\00", align 1
-@str = private unnamed_addr constant [38 x i8] c"\0ACopying 100 char string into dest...\00"
-@str.13 = private unnamed_addr constant [22 x i8] c"No overflow occurred.\00"
+@str = private unnamed_addr constant [37 x i8] c"Copying 100 char string into dest...\00"
+@str.13 = private unnamed_addr constant [29 x i8] c"Performing function call one\00"
+@str.14 = private unnamed_addr constant [29 x i8] c"Performing function call two\00"
+@str.15 = private unnamed_addr constant [28 x i8] c"No stack smashing occurred.\00"
 
 ; Function Attrs: minsize nounwind optsize
 define hidden i32 @fun2() local_unnamed_addr #0 {
@@ -27,8 +27,7 @@ define hidden i32 @fun2() local_unnamed_addr #0 {
   %2 = bitcast i64* %1 to i8*
   call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %2) #3
   store i64 14195199344538739, i64* %1, align 8
-  %3 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str, i32 0, i32 0)) #4
-  %4 = call i32 @puts(i8* nonnull %2) #4
+  %3 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str, i32 0, i32 0), i64* nonnull %1) #4
   call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %2) #3
   ret i32 2
 }
@@ -42,16 +41,12 @@ declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture writeonly, i8* nocapture r
 ; Function Attrs: minsize nounwind optsize
 declare i32 @printf(i8* nocapture readonly, ...) local_unnamed_addr #2
 
-; Function Attrs: minsize nounwind optsize
-declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #2
-
 ; Function Attrs: argmemonly nounwind
 declare void @llvm.lifetime.end.p0i8(i64, i8* nocapture) #1
 
 ; Function Attrs: minsize nounwind optsize
-define hidden i32 @fun1(i8* nocapture readonly) local_unnamed_addr #0 {
-  %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.1, i32 0, i32 0)) #4
-  %3 = tail call i32 @puts(i8* %0) #4
+define hidden i32 @fun1(i8*) local_unnamed_addr #0 {
+  %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i32 0, i32 0), i8* %0) #4
   ret i32 1
 }
 
@@ -72,30 +67,22 @@ define hidden i32 @vulnerable() local_unnamed_addr #0 {
   %8 = getelementptr inbounds [9 x i8], [9 x i8]* %4, i32 0, i32 0
   call void @llvm.lifetime.start.p0i8(i64 9, i8* nonnull %8) #3
   call void @llvm.memcpy.p0i8.p0i8.i32(i8* nonnull %8, i8* getelementptr inbounds ([9 x i8], [9 x i8]* @vulnerable.str2, i32 0, i32 0), i32 9, i32 1, i1 false)
-  %9 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str.2, i32 0, i32 0)) #4
-  %10 = call i32 @puts(i8* nonnull %7) #4
-  %11 = tail call i32 @puts(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @str, i32 0, i32 0))
-  %12 = call i8* @strcpy(i8* nonnull %7, i8* getelementptr inbounds ([101 x i8], [101 x i8]* @src, i32 0, i32 0)) #5
-  %13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.4, i32 0, i32 0)) #4
-  %14 = call i32 @puts(i8* nonnull %7) #4
-  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.5, i32 0, i32 0)) #4
-  %16 = call i32 @fun1(i8* nonnull %5) #4
-  %17 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.4, i32 0, i32 0)) #4
-  %18 = call i32 @puts(i8* nonnull %7) #4
-  %19 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.6, i32 0, i32 0)) #4
-  %20 = call i32 @fun2() #4
-  %21 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.4, i32 0, i32 0)) #4
-  %22 = call i32 @puts(i8* nonnull %7) #4
-  %23 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.7, i32 0, i32 0)) #4
-  %24 = getelementptr inbounds [5 x i8], [5 x i8]* %3, i32 0, i32 30
-  %25 = call i32 @puts(i8* nonnull %24) #4
-  %26 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.8, i32 0, i32 0)) #4
-  %27 = getelementptr inbounds [5 x i8], [5 x i8]* %3, i32 0, i32 3
-  %28 = call i32 @puts(i8* nonnull %27) #4
-  %29 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.9, i32 0, i32 0)) #4
-  %30 = call i32 @puts(i8* nonnull %6) #4
-  %31 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.10, i32 0, i32 0)) #4
-  %32 = call i32 @puts(i8* nonnull %8) #4
+  %9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.2, i32 0, i32 0), i8* nonnull %7) #4
+  %10 = call i32 @puts(i8* getelementptr inbounds ([37 x i8], [37 x i8]* @str, i32 0, i32 0))
+  %11 = call i8* @strcpy(i8* nonnull %7, i8* getelementptr inbounds ([101 x i8], [101 x i8]* @src, i32 0, i32 0)) #5
+  %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
+  %13 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.13, i32 0, i32 0))
+  %14 = call i32 @fun1(i8* nonnull %5) #4
+  %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
+  %16 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.14, i32 0, i32 0))
+  %17 = call i32 @fun2() #4
+  %18 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
+  %19 = getelementptr inbounds [5 x i8], [5 x i8]* %3, i32 0, i32 30
+  %20 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.7, i32 0, i32 0), i8* nonnull %19) #4
+  %21 = getelementptr inbounds [5 x i8], [5 x i8]* %3, i32 0, i32 3
+  %22 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.8, i32 0, i32 0), i8* nonnull %21) #4
+  %23 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.9, i32 0, i32 0), i8* nonnull %6) #4
+  %24 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.10, i32 0, i32 0), i8* nonnull %8) #4
   call void @llvm.lifetime.end.p0i8(i64 9, i8* nonnull %8) #3
   call void @llvm.lifetime.end.p0i8(i64 5, i8* nonnull %7) #3
   call void @llvm.lifetime.end.p0i8(i64 9, i8* nonnull %6) #3
@@ -110,9 +97,12 @@ declare i8* @strcpy(i8*, i8* nocapture readonly) local_unnamed_addr #2
 define hidden i32 @main() local_unnamed_addr #0 {
   %1 = tail call i32 @vulnerable() #4
   %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.11, i32 0, i32 0), i32 1) #4
-  %3 = tail call i32 @puts(i8* getelementptr inbounds ([22 x i8], [22 x i8]* @str.13, i32 0, i32 0))
+  %3 = tail call i32 @puts(i8* getelementptr inbounds ([28 x i8], [28 x i8]* @str.15, i32 0, i32 0))
   ret i32 0
 }
+
+; Function Attrs: nounwind
+declare i32 @puts(i8* nocapture readonly) local_unnamed_addr #3
 
 attributes #0 = { minsize nounwind optsize "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="false" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #1 = { argmemonly nounwind }

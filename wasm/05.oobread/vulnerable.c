@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 char src[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj";
@@ -23,6 +24,7 @@ int vulnerable(char *mainstring) {
    char str1[] = "string1\n";
    char dest[5] = "cccc\0";
    char str2[] = "string2\n";
+   char *heap = malloc(1);
 
    printf("\ndest is 5 characters long: ");
    puts(dest);
@@ -34,6 +36,18 @@ int vulnerable(char *mainstring) {
       printf("\ndest[%d]: ", x);
       puts(dest+x);
    }
+
+   for(x = 0; x < 512; x++) {
+      printf("\nheap[%d]: ", x);
+      puts(heap+x);
+   }
+
+   for(x = 0; x > -512; x--) {
+      printf("\nheap[%d]: ", x);
+      puts(heap+x);
+   }
+
+
 
    printf("\ndest[5]: "); // C returns "strfun1" but Wasm returns "string1"
    puts(dest+5);
