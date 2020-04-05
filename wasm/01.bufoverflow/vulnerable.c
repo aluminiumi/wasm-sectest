@@ -18,10 +18,10 @@ int vulnerable() {
    // establish some variables on the stack frame
    int one;
    int two;
-   char strfun1[] = "strfun1\n";
+   char strfun1[] = "strfun1\n"; // char array passed into function
    char str1[] = "string1\n"; // gets overwritten with "aaaaabbbb..." in both C and Wasm
-   char dest[5];
-   char str2[] = "string2\n"; // does not get overwritten in Wasm, but in C becomes "bbbbbbcccccccccc..."
+   char dest[5]; // buffer subjected to overflow
+   char str2[] = "string2\n"; // not overwritten in Wasm, but in C becomes "bbbbbbcccccccccc..."
 
    // print out uninitialized dest data
    printf("dest is 5 characters long: %s\n", dest);
@@ -47,10 +47,11 @@ int vulnerable() {
    // Wasm prints up to char 6, C prints all characters from 3 onward
    printf("dest[3]: %s\n", dest+3);
 
-   printf("str1: %s\n", str1);
-   printf("str2: %s\n", str2);
+   printf("str1: %s\n", str1); // overwritten in C and Wasm
+   printf("str2: %s\n", str2); // overwritten in C, not in Wasm
 
    // Stack smashing in C, but not in Wasm
+   printf("returning...\n");
    return 1;
 }
 

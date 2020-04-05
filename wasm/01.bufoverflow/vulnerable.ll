@@ -15,11 +15,12 @@ target triple = "wasm32"
 @.str.8 = private unnamed_addr constant [13 x i8] c"dest[3]: %s\0A\00", align 1
 @.str.9 = private unnamed_addr constant [10 x i8] c"str1: %s\0A\00", align 1
 @.str.10 = private unnamed_addr constant [10 x i8] c"str2: %s\0A\00", align 1
-@.str.11 = private unnamed_addr constant [12 x i8] c"Result: %d\0A\00", align 1
+@.str.12 = private unnamed_addr constant [12 x i8] c"Result: %d\0A\00", align 1
 @str = private unnamed_addr constant [37 x i8] c"Copying 100 char string into dest...\00"
-@str.13 = private unnamed_addr constant [29 x i8] c"Performing function call one\00"
-@str.14 = private unnamed_addr constant [29 x i8] c"Performing function call two\00"
-@str.15 = private unnamed_addr constant [28 x i8] c"No stack smashing occurred.\00"
+@str.14 = private unnamed_addr constant [29 x i8] c"Performing function call one\00"
+@str.15 = private unnamed_addr constant [29 x i8] c"Performing function call two\00"
+@str.16 = private unnamed_addr constant [13 x i8] c"returning...\00"
+@str.17 = private unnamed_addr constant [28 x i8] c"No stack smashing occurred.\00"
 
 ; Function Attrs: minsize nounwind optsize
 define hidden i32 @fun2() local_unnamed_addr #0 {
@@ -71,10 +72,10 @@ define hidden i32 @vulnerable() local_unnamed_addr #0 {
   %10 = call i32 @puts(i8* getelementptr inbounds ([37 x i8], [37 x i8]* @str, i32 0, i32 0))
   %11 = call i8* @strcpy(i8* nonnull %7, i8* getelementptr inbounds ([101 x i8], [101 x i8]* @src, i32 0, i32 0)) #5
   %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
-  %13 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.13, i32 0, i32 0))
+  %13 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.14, i32 0, i32 0))
   %14 = call i32 @fun1(i8* nonnull %5) #4
   %15 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
-  %16 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.14, i32 0, i32 0))
+  %16 = call i32 @puts(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @str.15, i32 0, i32 0))
   %17 = call i32 @fun2() #4
   %18 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.4, i32 0, i32 0), i8* nonnull %7) #4
   %19 = getelementptr inbounds [5 x i8], [5 x i8]* %3, i32 0, i32 30
@@ -83,6 +84,7 @@ define hidden i32 @vulnerable() local_unnamed_addr #0 {
   %22 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.8, i32 0, i32 0), i8* nonnull %21) #4
   %23 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.9, i32 0, i32 0), i8* nonnull %6) #4
   %24 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.10, i32 0, i32 0), i8* nonnull %8) #4
+  %25 = call i32 @puts(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @str.16, i32 0, i32 0))
   call void @llvm.lifetime.end.p0i8(i64 9, i8* nonnull %8) #3
   call void @llvm.lifetime.end.p0i8(i64 5, i8* nonnull %7) #3
   call void @llvm.lifetime.end.p0i8(i64 9, i8* nonnull %6) #3
@@ -96,8 +98,8 @@ declare i8* @strcpy(i8*, i8* nocapture readonly) local_unnamed_addr #2
 ; Function Attrs: minsize nounwind optsize
 define hidden i32 @main() local_unnamed_addr #0 {
   %1 = tail call i32 @vulnerable() #4
-  %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.11, i32 0, i32 0), i32 1) #4
-  %3 = tail call i32 @puts(i8* getelementptr inbounds ([28 x i8], [28 x i8]* @str.15, i32 0, i32 0))
+  %2 = tail call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.12, i32 0, i32 0), i32 1) #4
+  %3 = tail call i32 @puts(i8* getelementptr inbounds ([28 x i8], [28 x i8]* @str.17, i32 0, i32 0))
   ret i32 0
 }
 
