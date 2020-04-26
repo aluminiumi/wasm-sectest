@@ -8,7 +8,6 @@
 1. Ensure that port 42001 is free and then run:
 ```bash
     $ npm install
-    $ npm install serve-index
     $ node index.js
 ```
 
