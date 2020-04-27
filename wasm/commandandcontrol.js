@@ -87,8 +87,8 @@ $(function () {
             // send the message
             connection.send(msg);
 
-            // disable the input field until server sends back response
-            input.attr('disabled', 'disabled').val('');
+            // blank input field
+            input.val('');
 
         }
     });

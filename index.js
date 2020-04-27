@@ -23,10 +23,12 @@ app.listen(port, () => {
 })
 
 // helper function for escaping input strings
+/*
 function htmlEntities(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
                       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+*/
 
 function dateLog(str) {
     console.log((new Date()) + " " + str);
@@ -53,7 +55,7 @@ wsServer.on('request', function(request) {
 
     var connection = request.accept(null, request.origin); 
     var index = clients.push(connection) - 1;
-    var userName = false;
+    var firstMessageReceived = false;
     var remoteAddr = connection.remoteAddress
     var origin = request.origin
 
@@ -70,17 +72,21 @@ wsServer.on('request', function(request) {
             return;
         }
 
-        if (userName === false) { // first message sent by user is their name
-            userName = htmlEntities(message.utf8Data);
+        if (firstMessageReceived === false) { // first message sent by user is their name
+            firstMessageReceived = true;
             connection.sendUTF(JSON.stringify({ type:'ok', id:index })); // tell them their index
-            dateLog('User from '+remoteAddr+' is known as: ' + userName);
+            dateLog('User from '+remoteAddr+' is known as: ' + index);
+            var msgObj = logMessage(index, "I have joined the network.");
+            broadcastMessage(msgObj);
             return;
         }
 
-        dateLog('Received message from '+ userName + ': ' + message.utf8Data);
+        dateLog('Received message from '+ index + ': ' + message.utf8Data);
                 
         // keep history of all sent messages
-        var msgObj = logMessage(userName, message);
+        //message = htmlEntities(message.utf8Data);
+        message = message.utf8Data;
+        var msgObj = logMessage(index, message);
 
         // process the command if it's a command
         var firstWord = getFirstWord(msgObj.text);
@@ -97,15 +103,48 @@ wsServer.on('request', function(request) {
         var text = msgObj.text;
         var command = text.split(" ");
         var argCount = command.length-1;
-        dateLog("argcount: "+argCount);
+        //dateLog("argcount: "+argCount);
+
         if (argCount == 0) {
             sendCommandHelp(index);
             return;
         }
+
         if (argCount == 2) {
             if (command[2] === 'sayhi') {
                 dateLog("Directing "+command[1]+" to SAYHI");
                 sendSayHi(command[1]);
+                return;
+            }            
+        }
+
+        if (argCount >= 3) {
+            var target = command[1];
+            var message = text.substr(text.indexOf(command[3]));
+
+
+            if (command[2] === 'say') {
+                dateLog("Directing "+target+" to say "+message);
+                sendSay(target, message);
+                return;
+            }
+
+            if (command[2] === 'echotoconsole') {
+                dateLog("Directing "+target+" to echo "+message);
+                sendEchoToConsole(target, message);
+                return;
+            }
+
+            if (command[2] === 'alert') {
+                dateLog("Directing "+target+" to alert "+message);
+                sendAlert(target, message);
+                return;
+            }
+
+            if (command[2] === 'execute') {
+                dateLog("Directing "+target+" to execute "+message);
+                sendExecute(target, message);
+                return;
             }
         }
     }
@@ -114,12 +153,65 @@ wsServer.on('request', function(request) {
         return msgText.split(" ", 1)
     }
 
+    function sendSay(destination_index, message) {
+        var data = "say "+message;
+
+        var obj = {
+            time: (new Date()).getTime(),
+            //text: htmlEntities(data),
+            text: data,
+            author: "cnc",
+        };
+
+        singlecastCommand(obj, destination_index);
+    }
+
+    function sendExecute(destination_index, message) {
+        var data = "execute "+message;
+
+        var obj = {
+            time: (new Date()).getTime(),
+            //text: htmlEntities(data),
+            text: data,
+            author: "cnc",
+        };
+
+        singlecastCommand(obj, destination_index);
+    }
+
+    function sendAlert(destination_index, message) {
+        var data = "alert "+message;
+
+        var obj = {
+            time: (new Date()).getTime(),
+            //text: htmlEntities(data),
+            text: data,
+            author: "cnc",
+        };
+
+        singlecastCommand(obj, destination_index);
+    }
+
+    function sendEchoToConsole(destination_index, message) {
+        var data = "echotoconsole "+message;
+
+        var obj = {
+            time: (new Date()).getTime(),
+            //text: htmlEntities(data),
+            text: data,
+            author: "cnc",
+        };
+
+        singlecastCommand(obj, destination_index);
+    }
+
     function sendSayHi(destination_index) {
         var data = "sayhi";
 
         var obj = {
             time: (new Date()).getTime(),
-            text: htmlEntities(data),
+            //text: htmlEntities(data),
+            text: data,
             author: "cnc",
         };
 
@@ -128,11 +220,15 @@ wsServer.on('request', function(request) {
 
     function sendCommandHelp(destination_index) {
         var data = "Commands:\n" 
-                 + " { <source> sayhi }\n";
+                 + " { <source> sayhi }, \n"
+                 + " { <source> say <message> }, \n"
+                 + " { <source> echotoconsole <message> }, \n"
+                 + " { <source> alert <message> }\n";
 
         var obj = {
             time: (new Date()).getTime(),
-            text: htmlEntities(data),
+            //text: htmlEntities(data),
+            text: data,
             author: "cnc",
         };
 
@@ -159,8 +255,7 @@ wsServer.on('request', function(request) {
     function logMessage(userName, message) {
         var obj = {
             time: (new Date()).getTime(),
-            text: htmlEntities(message.utf8Data),
-            //author: userName,
+            text: message,
             author: index,
         };
         history.push(obj);
@@ -170,9 +265,11 @@ wsServer.on('request', function(request) {
 
     // user disconnected
     connection.on('close', function(connection) {
-        if (userName !== false) {
-            dateLog("Peer "+ userName + " ("+remoteAddr+") disconnected.");
+        if (index != -1) {
+            dateLog("Peer "+ index + " ("+remoteAddr+") disconnected.");
             clients.splice(index, 1); // remove user from the list of connected clients
+            var msgObj = logMessage(index, "I have left the network.");
+            broadcastMessage(msgObj);
         }
     });
 
